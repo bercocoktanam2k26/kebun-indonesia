@@ -399,7 +399,7 @@
   }
 
   function init(){
-    const targetIndex = VIDEOS.findIndex(v => extractDriveId(v.driveLink) === CURRENT_VIDEO_ID);
+    const targetIndex = VIDEOS.findIndex(v => v.driveId === CURRENT_VIDEO_ID);
     if(targetIndex === -1) return;
 
     const v = VIDEOS[targetIndex];
@@ -432,7 +432,7 @@
       document.getElementById('other-heading').style.display = 'block';
       const otherWrap = document.getElementById('other-videos');
       others.forEach(o => {
-        const oId = extractDriveId(o.driveLink);
+        const oId = o.driveId;
         const oPage = slugify(o.judul) + '.html';
         const oCard = document.createElement('div');
         oCard.className = 'other-card';

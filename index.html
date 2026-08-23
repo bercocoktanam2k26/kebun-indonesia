@@ -350,16 +350,15 @@
 <script>
   /* =====================================================================
      DAFTAR VIDEO
-     Cara menambah video baru: salin salah satu blok { ... } di bawah,
-     tempel PALING ATAS di dalam array VIDEOS (posisi paling awal),
-     lalu isi 4 bagian ini:
+     Daftar video TIDAK ditanam di sini — diambil otomatis lewat
+     fetch('videos.json'). Untuk menambah video baru, edit videos.json
+     (bukan file ini), isi 4 bagian ini per video:
        judul     -> judul video
        deskripsi -> ringkasan singkat video (boleh dikosongkan "")
-       driveLink -> link Google Drive video (link share biasa juga bisa,
-                    ID-nya akan diambil otomatis)
+       driveId   -> ID file Google Drive video
        tanggal   -> tanggal upload, format bebas misalnya "5 Agustus 2026"
-     Video paling atas di array = video paling baru = tampil paling awal
-     di bedengan (grid 4 video per baris).
+     Video paling atas di videos.json = video paling baru = tampil
+     paling awal di bedengan (grid 4 video per baris).
      ===================================================================== */
   let VIDEOS = [];
 
@@ -467,7 +466,7 @@
     VIDEOS.forEach((v, i) => {
       const episodeNumber = VIDEOS.length - i;
       const isLatest = i === 0;
-      const driveId = extractDriveId(v.driveLink);
+      const driveId = v.driveId;
 
       const card = document.createElement('div');
       card.className = 'card' + (isLatest ? ' latest' : '');
