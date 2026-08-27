@@ -383,6 +383,32 @@
       .replace(/(^-|-$)/g, '');
   }
 
+  // Thumbnail di situs (grid & halaman video) sekarang memakai gambar
+  // cover yang sama dengan og:image: coba covers/{slug}.jpg/.jpeg/.png/.webp
+  // dulu, kalau semuanya tidak ada baru fallback ke thumbnail otomatis
+  // Google Drive. Fallback dicoba berurutan lewat event onerror <img>.
+  function thumbImgHTML(driveId, judul){
+    const slug = slugify(judul);
+    const candidates = [
+      `covers/${slug}.png`,
+      `covers/${slug}.jpg`,
+      `covers/${slug}.jpeg`,
+      `covers/${slug}.webp`,
+      `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`
+    ];
+    const first = candidates.shift();
+    const fallbackAttr = candidates.map(encodeURIComponent).join('|');
+    return `<img class="video-thumb" src="${first}" data-fallback="${fallbackAttr}" onerror="thumbFallback(this)" alt="${judul}" loading="lazy">`;
+  }
+
+  function thumbFallback(img){
+    const list = (img.dataset.fallback || '').split('|').filter(Boolean);
+    if(!list.length){ img.onerror = null; return; }
+    const next = decodeURIComponent(list.shift());
+    img.dataset.fallback = list.join('|');
+    img.src = next;
+  }
+
   function makeVideoFrame(driveId, judul, autoLoad, linkToPage){
     const frame = document.createElement(autoLoad ? 'div' : 'a');
     frame.className = 'video-frame';
@@ -391,7 +417,7 @@
       frame.innerHTML = `<iframe src="https://drive.google.com/file/d/${driveId}/preview?autoplay=1" allow="autoplay" allowfullscreen></iframe>`;
     } else {
       frame.innerHTML = `
-        <img class="video-thumb" src="https://drive.google.com/thumbnail?id=${driveId}&sz=w1000" alt="${judul}" loading="lazy">
+        ${thumbImgHTML(driveId, judul)}
         <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
       `;
     }

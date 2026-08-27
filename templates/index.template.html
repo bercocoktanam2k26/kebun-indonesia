@@ -444,6 +444,32 @@
       .replace(/(^-|-$)/g, '');
   }
 
+  // Thumbnail di situs (grid & halaman video) sekarang memakai gambar
+  // cover yang sama dengan og:image: coba covers/{slug}.jpg/.jpeg/.png/.webp
+  // dulu, kalau semuanya tidak ada baru fallback ke thumbnail otomatis
+  // Google Drive. Fallback dicoba berurutan lewat event onerror <img>.
+  function thumbImgHTML(driveId, judul){
+    const slug = slugify(judul);
+    const candidates = [
+      `covers/${slug}.png`,
+      `covers/${slug}.jpg`,
+      `covers/${slug}.jpeg`,
+      `covers/${slug}.webp`,
+      `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`
+    ];
+    const first = candidates.shift();
+    const fallbackAttr = candidates.map(encodeURIComponent).join('|');
+    return `<img class="video-thumb" src="${first}" data-fallback="${fallbackAttr}" onerror="thumbFallback(this)" alt="${judul}" loading="lazy">`;
+  }
+
+  function thumbFallback(img){
+    const list = (img.dataset.fallback || '').split('|').filter(Boolean);
+    if(!list.length){ img.onerror = null; return; }
+    const next = decodeURIComponent(list.shift());
+    img.dataset.fallback = list.join('|');
+    img.src = next;
+  }
+
   function renderFeed(){
     const feed = document.getElementById('feed');
     feed.innerHTML = '';
@@ -474,7 +500,7 @@
       card.innerHTML = `
         ${isLatest ? '<span class="badge-baru">BARU</span>' : ''}
         <a class="video-frame" href="${pageUrl}">
-          <img class="video-thumb" src="https://drive.google.com/thumbnail?id=${driveId}&sz=w1000" alt="${v.judul}" loading="lazy">
+          ${thumbImgHTML(driveId, v.judul)}
           <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
         </a>
         <div class="card-meta">
