@@ -57,14 +57,26 @@ def cover_image_url(slug, drive_id):
     return f"https://drive.google.com/thumbnail?id={drive_id}&sz=w1200"
 
 
-def build_index():
-    """index.html sekarang statis (tidak ada data video ditanam di dalamnya),
-    jadi cukup disalin langsung dari template - isinya akan selalu sama persis
-    setiap kali digenerate, tidak perlu diupload ulang kalau sudah pernah ada
-    di repo."""
+def build_index(videos):
+    """index.html isinya tetap tidak menanam daftar video (data tetap lewat
+    fetch ke videos.json di browser), TAPI og:image (preview link saat
+    dibagikan ke WhatsApp/Facebook/Twitter) dibuat dinamis: memakai cover
+    video TERBARU (videos[0]) dengan fallback otomatis ke thumbnail Google
+    Drive kalau cover custom belum diupload - sama seperti tiap halaman
+    video. Jadi index.html perlu diupload ulang tiap kali video terbaru
+    berganti (GitHub Actions sudah menangani ini otomatis)."""
     template_path = os.path.join(ROOT, "templates", "index.template.html")
     with open(template_path, "r", encoding="utf-8") as f:
         html = f.read()
+
+    if videos:
+        latest = videos[0]
+        slug = slugify(latest["judul"])
+        og_image = cover_image_url(slug, latest["driveId"])
+    else:
+        og_image = f"{SITE_BASE_URL}cover.jpg"
+
+    html = html.replace("__OG_IMAGE__", og_image)
 
     out_path = os.path.join(ROOT, "index.html")
     with open(out_path, "w", encoding="utf-8") as f:
@@ -101,7 +113,7 @@ def main():
     if not videos:
         print("videos.json kosong, tidak ada yang digenerate.", file=sys.stderr)
         return
-    build_index()
+    build_index(videos)
     build_video_pages(videos)
 
 
