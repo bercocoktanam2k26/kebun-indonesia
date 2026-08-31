@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RepoPilot AI — Gemini Test</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,sans-serif;background:#f4f6f8;color:#202124}
+.wrap{width:min(760px,calc(100% - 28px));margin:40px auto}.card{background:#fff;border:1px solid #dadce0;border-radius:14px;padding:24px;box-shadow:0 4px 18px rgba(0,0,0,.06)}
+h1{margin:0 0 8px;font-size:28px}.sub{color:#5f6368;margin:0 0 22px}
+textarea{width:100%;min-height:130px;resize:vertical;padding:14px;border:1px solid #c7c9cc;border-radius:10px;font:inherit;outline:none}
+textarea:focus{border-color:#4285f4}button{margin-top:12px;width:100%;padding:13px 18px;border:0;border-radius:10px;background:#1a73e8;color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}.status{margin-top:16px;padding:12px;border-radius:9px;background:#f1f3f4;font-size:14px}
+.answer{margin-top:16px;padding:16px;border:1px solid #e0e3e7;border-radius:10px;background:#fafafa;white-space:pre-wrap;line-height:1.55;min-height:80px}
+.ok{color:#137333}.err{color:#b3261e}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+<h1>🤖 RepoPilot AI</h1>
+<p class="sub">Halaman tes Gemini melalui Cloudflare Worker.</p>
+<textarea id="prompt" placeholder="Contoh: Jelaskan fungsi videos.json pada website saya."></textarea>
+<button id="askBtn">Tanya Gemini</button>
+<div id="status" class="status">Siap melakukan tes.</div>
+<div id="answer" class="answer">Jawaban AI akan muncul di sini.</div>
+</div></div>
+
+<script>
+const API_URL="https://repopilot-api.elableken-6a1.workers.dev/";
+const promptEl=document.getElementById("prompt");
+const button=document.getElementById("askBtn");
+const status=document.getElementById("status");
+const answer=document.getElementById("answer");
+
+async function askGemini(){
+ const prompt=promptEl.value.trim();
+ if(!prompt){status.textContent="Masukkan pertanyaan terlebih dahulu.";status.className="status err";return;}
+ button.disabled=true;button.textContent="Memproses...";
+ status.textContent="Menghubungi RepoPilot API...";status.className="status";answer.textContent="";
+ try{
+  const response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
+  const data=await response.json();
+  if(!response.ok||!data.success)throw new Error(data.error||"Request gagal. Periksa Worker dan Gemini API.");
+  status.textContent="✅ Gemini berhasil memberikan jawaban.";status.className="status ok";
+  answer.textContent=data.answer||"Tidak ada jawaban.";
+ }catch(error){
+  status.textContent="❌ Terjadi kesalahan.";status.className="status err";
+  answer.textContent=error.message;
+ }finally{button.disabled=false;button.textContent="Tanya Gemini";}
+}
+button.addEventListener("click",askGemini);
+promptEl.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")askGemini();});
+</script>
+</body>
+</html>

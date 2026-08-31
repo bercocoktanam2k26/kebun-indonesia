@@ -1,0 +1,41 @@
+### 🔍 **Analisis Kekurangan & Inkonsistensi Data**
+
+1. **Metadata Masih Kosong (`deskripsi` & `ogImage`)**
+   * Sebagian besar video (terutama seri *Bercocok Tanam*) memiliki bidang `"deskripsi": ""` dan `"ogImage": ""` yang kosong.
+   * *Dampak:* Tampilan thumbnail (Open Graph) dan deskripsi tidak muncul saat di-share ke media sosial atau ditampilkan di frontend.
+
+2. **Format Tanggal Tidak Konsisten**
+   * Ada yang menggunakan format Teks Bahasa Indonesia: `"28 Agustus 2026"`.
+   * Ada yang menggunakan format ISO: `"2026-08-30"`.
+   * *Dampak:* Menyulitkan parsing atau sorting tanggal secara otomatis melalui program/script.
+
+3. **Part Seri "Bercocok Tanam" Terputus / Hilang**
+   * Terdapat urutan part yang hilang dari daftar:
+     * **Part 1, 2, 3**
+     * **Part 7**
+     * **Part 14**
+     * **Part 24, 25**
+
+4. **Pengurutan Data Kurang Terstruktur**
+   * Judul khusus/viral (seperti *"Viral Bakit sorong Part 2"*, *"BAKIT SORONG ANGEL KAMBUAYA"*) terselip di antara nomor part seri *Bercocok Tanam*, sehingga urutan part dan tanggal menjadi tidak rapi.
+
+---
+
+### 🛠️ **Saran Perbaikan Data (Contoh Struktur Standar)**
+
+Untuk menjaga konsistensi, disarankan untuk menyamakan format tanggal ke **ISO 8601 (`YYYY-MM-DD`)** dan melengkapi metadata:
+
+```json
+[
+  {
+    "judul": "Bercocok Tanam Part 64",
+    "driveId": "1o_2cUBUxj38R1h0o5LVmMWCBlZPmXVIx",
+    "tanggal": "2026-08-28",
+    "deskripsi": "Deskripsi singkat video Bercocok Tanam Part 64",
+    "ogImage": "https://bercocoktanam2k26.github.io/kebun-papua/covers/part-64.png"
+  }
+]
+```
+
+---
+*Catatan: File belum diubah secara langsung di repository. Jika Anda ingin saya mengupdate atau merapikan file `videos.json` ini, beritahu bagian mana yang ingin diprioritaskan.*
