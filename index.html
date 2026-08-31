@@ -439,8 +439,8 @@
   // -> "bercocok-tanam-part-1"). Nama file halaman video individual HARUS
   // mengikuti pola ini juga.
   function getCover(video){
-    if(video && video.ogImage) return video.ogImage;
     if(!video || !video.judul) return "";
+    if(video.ogImage && video.ogImage.indexOf("viral18plus.github.io/") !== -1) return video.ogImage;
     const slug = slugify(video.judul);
     return `covers/${slug}.jpg`;
   }
@@ -504,7 +504,7 @@
       card.innerHTML = `
         ${isLatest ? '<span class="badge-baru">BARU</span>' : ''}
         <a class="video-frame" href="${pageUrl}">
-          ${thumbImgHTML(v)}
+          ${thumbImgHTML(video)}
           <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
         </a>
         <div class="card-meta">

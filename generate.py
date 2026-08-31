@@ -61,13 +61,18 @@ def load_videos():
 def cover_image_url(slug, drive_id, og_image=""):
     """Gunakan ogImage dari videos.json bila valid; jika kosong, cari cover lokal.
     Tidak menggunakan thumbnail Google Drive sebagai OG Image."""
+    # Prioritaskan file cover yang benar-benar ada di repository.
+    # Ini mencegah metadata menunjuk ke .jpg ketika cover lama sebenarnya .png.
+    for ext in ("jpg", "jpeg", "png", "webp"):
+        cover_path = os.path.join(ROOT, "covers", f"{slug}.{ext}")
+        if os.path.isfile(cover_path):
+            return build_og_image(SITE_REPO, slug, ext)
+
+    # Jika cover tidak ikut dalam checkout/build, pertahankan ogImage lokal
+    # yang sudah tersimpan di videos.json. Tidak pernah fallback ke Google Drive.
     expected_prefix = f"{SITE_BASE_URL}covers/"
     if og_image and og_image.startswith(expected_prefix):
         return og_image
-    for ext in ("jpg", "jpeg", "png", "webp"):
-        cover_path = os.path.join(ROOT, "covers", f"{slug}.{ext}")
-        if os.path.exists(cover_path):
-            return build_og_image(SITE_REPO, slug, ext)
     return ""
 
 
