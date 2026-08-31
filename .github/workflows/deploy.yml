@@ -32,6 +32,36 @@ jobs:
       - name: Jalankan generator
         run: python3 generate.py
 
+      - name: Verifikasi halaman video hasil generator
+        run: |
+          python3 - <<'PY'
+          import json, re, pathlib, sys
+          root = pathlib.Path('.')
+          videos = json.loads((root / 'videos.json').read_text(encoding='utf-8'))
+          def slugify(text):
+              text = text.lower().strip()
+              text = re.sub(r'[^a-z0-9]+', '-', text)
+              return text.strip('-')
+          missing = []
+          bad_og = []
+          for v in videos:
+              slug = slugify(v.get('judul', ''))
+              page = root / f'{slug}.html'
+              if not page.is_file():
+                  missing.append(page.name)
+              og = str(v.get('ogImage', '') or '')
+              expected = f"https://viral18plus.github.io/indonesia/covers/{slug}."
+              if not og.startswith(expected):
+                  bad_og.append((v.get('judul'), og))
+          if missing:
+              print('ERROR: generator tidak membuat halaman:', ', '.join(missing))
+              sys.exit(1)
+          if bad_og:
+              print('ERROR: OG Image tidak sesuai:', bad_og)
+              sys.exit(1)
+          print(f'OK: {len(videos)} halaman video tersedia dan OG Image tervalidasi.')
+          PY
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
