@@ -377,6 +377,13 @@
     return link.trim();
   }
 
+  function getCover(video){
+    if(video && video.ogImage) return video.ogImage;
+    if(!video || !video.judul) return "";
+    const slug = slugify(video.judul);
+    return `covers/${slug}.jpg`;
+  }
+
   function slugify(str){
     return str.toLowerCase().trim()
       .replace(/[^a-z0-9]+/g, '-')
@@ -384,18 +391,16 @@
   }
 
   // Thumbnail di situs (grid & halaman video) sekarang memakai gambar
-  // cover yang sama dengan og:image: coba covers/{slug}.jpg/.jpeg/.png/.webp
-  // dulu, kalau semuanya tidak ada baru fallback ke thumbnail otomatis
-  // Google Drive. Fallback dicoba berurutan lewat event onerror <img>.
-  function thumbImgHTML(driveId, judul){
+  // Thumbnail memakai ogImage dari videos.json atau cover lokal berdasarkan slug.
+  // Tidak ada fallback ke Google Drive.
+  function thumbImgHTML(v){
+    const driveId = v.driveId;
+    const judul = v.judul;
     const slug = slugify(judul);
-    const candidates = [
-      `covers/${slug}.png`,
-      `covers/${slug}.jpg`,
-      `covers/${slug}.jpeg`,
-      `covers/${slug}.webp`,
-      `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`
-    ];
+    const candidates = [];
+    const cover = getCover(v);
+    if(cover) candidates.push(cover);
+    candidates.push(`covers/${slug}.png`, `covers/${slug}.jpg`, `covers/${slug}.jpeg`, `covers/${slug}.webp`);
     const first = candidates.shift();
     const fallbackAttr = candidates.map(encodeURIComponent).join('|');
     return `<img class="video-thumb" src="${first}" data-fallback="${fallbackAttr}" onerror="thumbFallback(this)" alt="${judul}" loading="lazy">`;
@@ -417,7 +422,7 @@
       frame.innerHTML = `<iframe src="https://drive.google.com/file/d/${driveId}/preview?autoplay=1" allow="autoplay" allowfullscreen></iframe>`;
     } else {
       frame.innerHTML = `
-        ${thumbImgHTML(driveId, judul)}
+        ${thumbImgHTML(v)}
         <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
       `;
     }

@@ -10,14 +10,14 @@
 <meta property="og:type" content="video.other">
 <meta property="og:title" content="Bercocok Tanam Indonesia Part 5">
 <meta property="og:description" content="Kumpulan video bercocok tanam ala Indonesia, dari bibit sampai panen.">
-<meta property="og:url" content="https://bercocoktanam2k26.github.io/kebun-indonesia/bercocok-tanam-indonesia-part-5.html">
-<meta property="og:image" content="https://drive.google.com/thumbnail?id=162Xr3-TeKdrxag-1SfU4fW62TWXbWNw5&sz=w1200">
+<meta property="og:url" content="https://viral18plus.github.io/indonesia/bercocok-tanam-indonesia-part-5.html">
+<meta property="og:image" content="">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="1200">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Bercocok Tanam Indonesia Part 5">
 <meta name="twitter:description" content="Kumpulan video bercocok tanam ala Indonesia, dari bibit sampai panen.">
-<meta name="twitter:image" content="https://drive.google.com/thumbnail?id=162Xr3-TeKdrxag-1SfU4fW62TWXbWNw5&sz=w1200">
+<meta name="twitter:image" content="">
 
 <!-- IKLAN ADSTERRA — POPUNDER (aktif di seluruh halaman) -->
 <script src="https://pl30677988.effectivecpmnetwork.com/3b/37/e2/3b37e254b77bbbdd9815f86b60261fe5.js"></script>
@@ -377,10 +377,41 @@
     return link.trim();
   }
 
+  function getCover(video){
+    if(video && video.ogImage) return video.ogImage;
+    if(!video || !video.judul) return "";
+    const slug = slugify(video.judul);
+    return `covers/${slug}.jpg`;
+  }
+
   function slugify(str){
     return str.toLowerCase().trim()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
+  }
+
+  // Thumbnail di situs (grid & halaman video) sekarang memakai gambar
+  // Thumbnail memakai ogImage dari videos.json atau cover lokal berdasarkan slug.
+  // Tidak ada fallback ke Google Drive.
+  function thumbImgHTML(v){
+    const driveId = v.driveId;
+    const judul = v.judul;
+    const slug = slugify(judul);
+    const candidates = [];
+    const cover = getCover(v);
+    if(cover) candidates.push(cover);
+    candidates.push(`covers/${slug}.png`, `covers/${slug}.jpg`, `covers/${slug}.jpeg`, `covers/${slug}.webp`);
+    const first = candidates.shift();
+    const fallbackAttr = candidates.map(encodeURIComponent).join('|');
+    return `<img class="video-thumb" src="${first}" data-fallback="${fallbackAttr}" onerror="thumbFallback(this)" alt="${judul}" loading="lazy">`;
+  }
+
+  function thumbFallback(img){
+    const list = (img.dataset.fallback || '').split('|').filter(Boolean);
+    if(!list.length){ img.onerror = null; return; }
+    const next = decodeURIComponent(list.shift());
+    img.dataset.fallback = list.join('|');
+    img.src = next;
   }
 
   function makeVideoFrame(driveId, judul, autoLoad, linkToPage){
@@ -391,7 +422,7 @@
       frame.innerHTML = `<iframe src="https://drive.google.com/file/d/${driveId}/preview?autoplay=1" allow="autoplay" allowfullscreen></iframe>`;
     } else {
       frame.innerHTML = `
-        <img class="video-thumb" src="https://drive.google.com/thumbnail?id=${driveId}&sz=w1000" alt="${judul}" loading="lazy">
+        ${thumbImgHTML(v)}
         <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
       `;
     }

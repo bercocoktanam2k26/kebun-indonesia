@@ -10,7 +10,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Bercocok Tanam Indonesia">
 <meta property="og:description" content="Kumpulan video bercocok tanam berepisode, dari bibit sampai panen.">
-<meta property="og:url" content="https://bercocoktanam2k26.github.io/kebun-indonesia/">
+<meta property="og:url" content="https://viral18plus.github.io/indonesia/">
 <meta property="og:image" content="__OG_IMAGE__">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -438,25 +438,29 @@
   // Mengubah judul video jadi nama file (contoh: "Bercocok Tanam Part 1"
   // -> "bercocok-tanam-part-1"). Nama file halaman video individual HARUS
   // mengikuti pola ini juga.
+  function getCover(video){
+    if(video && video.ogImage) return video.ogImage;
+    if(!video || !video.judul) return "";
+    const slug = slugify(video.judul);
+    return `covers/${slug}.jpg`;
+  }
+
   function slugify(str){
     return str.toLowerCase().trim()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
   }
 
-  // Thumbnail di situs (grid & halaman video) sekarang memakai gambar
-  // cover yang sama dengan og:image: coba covers/{slug}.jpg/.jpeg/.png/.webp
-  // dulu, kalau semuanya tidak ada baru fallback ke thumbnail otomatis
-  // Google Drive. Fallback dicoba berurutan lewat event onerror <img>.
-  function thumbImgHTML(driveId, judul){
+  // Thumbnail situs memakai ogImage dari videos.json terlebih dahulu,
+  // lalu mencoba cover lokal berdasarkan slug. Tidak ada fallback ke Google Drive.
+  function thumbImgHTML(v){
+    const driveId = v.driveId;
+    const judul = v.judul;
     const slug = slugify(judul);
-    const candidates = [
-      `covers/${slug}.png`,
-      `covers/${slug}.jpg`,
-      `covers/${slug}.jpeg`,
-      `covers/${slug}.webp`,
-      `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`
-    ];
+    const candidates = [];
+    const cover = getCover(v);
+    if(cover) candidates.push(cover);
+    candidates.push(`covers/${slug}.png`, `covers/${slug}.jpg`, `covers/${slug}.jpeg`, `covers/${slug}.webp`);
     const first = candidates.shift();
     const fallbackAttr = candidates.map(encodeURIComponent).join('|');
     return `<img class="video-thumb" src="${first}" data-fallback="${fallbackAttr}" onerror="thumbFallback(this)" alt="${judul}" loading="lazy">`;

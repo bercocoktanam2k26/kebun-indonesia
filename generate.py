@@ -32,7 +32,18 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-SITE_BASE_URL = "https://bercocoktanam2k26.github.io/kebun-indonesia/"
+GITHUB_OWNER = "viral18plus"
+REPOSITORIES = {
+    "indonesia": "indonesia",
+    "papua": "papua",
+}
+SITE_REPO = "indonesia"
+def build_og_image(repo, slug, extension="jpg"):
+    target = REPOSITORIES[repo]
+    return f"https://{GITHUB_OWNER}.github.io/{target}/covers/{slug}.{extension}"
+
+
+SITE_BASE_URL = f"https://{GITHUB_OWNER}.github.io/{REPOSITORIES[SITE_REPO]}/"
 DEFAULT_DESC = "Kumpulan video bercocok tanam ala Indonesia, dari bibit sampai panen."
 
 
@@ -47,23 +58,25 @@ def load_videos():
         return json.load(f)
 
 
-def cover_image_url(slug, drive_id):
-    """Pakai cover custom kalau filenya ada di covers/ (boleh .jpg/.jpeg/.png/.webp),
-    kalau tidak ada fallback ke thumbnail otomatis Google Drive."""
+def cover_image_url(slug, drive_id, og_image=""):
+    """Gunakan ogImage dari videos.json bila valid; jika kosong, cari cover lokal.
+    Tidak menggunakan thumbnail Google Drive sebagai OG Image."""
+    expected_prefix = f"{SITE_BASE_URL}covers/"
+    if og_image and og_image.startswith(expected_prefix):
+        return og_image
     for ext in ("jpg", "jpeg", "png", "webp"):
         cover_path = os.path.join(ROOT, "covers", f"{slug}.{ext}")
         if os.path.exists(cover_path):
-            return f"{SITE_BASE_URL}covers/{slug}.{ext}"
-    return f"https://drive.google.com/thumbnail?id={drive_id}&sz=w1200"
+            return build_og_image(SITE_REPO, slug, ext)
+    return ""
 
 
 def build_index(videos):
     """index.html isinya tetap tidak menanam daftar video (data tetap lewat
     fetch ke videos.json di browser), TAPI og:image (preview link saat
     dibagikan ke WhatsApp/Facebook/Twitter) dibuat dinamis: memakai cover
-    video TERBARU (videos[0]) dengan fallback otomatis ke thumbnail Google
-    Drive kalau cover custom belum diupload - sama seperti tiap halaman
-    video. Jadi index.html perlu diupload ulang tiap kali video terbaru
+    video TERBARU (videos[0]) dengan cover lokal jika tersedia; jika tidak ada, meta OG dibiarkan kosong.
+    Tidak ada fallback ke Google Drive. Jadi index.html perlu diupload ulang tiap kali video terbaru
     berganti (GitHub Actions sudah menangani ini otomatis)."""
     template_path = os.path.join(ROOT, "templates", "index.template.html")
     with open(template_path, "r", encoding="utf-8") as f:
@@ -72,7 +85,7 @@ def build_index(videos):
     if videos:
         latest = videos[0]
         slug = slugify(latest["judul"])
-        og_image = cover_image_url(slug, latest["driveId"])
+        og_image = cover_image_url(slug, latest["driveId"], latest.get("ogImage", ""))
     else:
         og_image = f"{SITE_BASE_URL}cover.jpg"
 
@@ -92,7 +105,7 @@ def build_video_pages(videos):
     for v in videos:
         slug = slugify(v["judul"])
         drive_id = v["driveId"]
-        og_image = cover_image_url(slug, drive_id)
+        og_image = cover_image_url(slug, drive_id, v.get("ogImage", ""))
 
         html = template
         html = html.replace("__PAGE_TITLE__", v["judul"])

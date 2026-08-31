@@ -4,20 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bercocok Tanam Indonesia Part 7 — Bercocok Tanam Indonesia</title>
-<meta name="description" content="Kumpulan video bercocok tanam ala Indonesia, dari bibit sampai panen.">
+<meta name="description" content="video Bercocok Tanam Indonesia Part 7">
 
 <!-- Open Graph (preview saat link dibagikan ke Facebook/WhatsApp/Twitter) -->
 <meta property="og:type" content="video.other">
 <meta property="og:title" content="Bercocok Tanam Indonesia Part 7">
-<meta property="og:description" content="Kumpulan video bercocok tanam ala Indonesia, dari bibit sampai panen.">
-<meta property="og:url" content="https://bercocoktanam2k26.github.io/kebun-indonesia/bercocok-tanam-indonesia-part-7.html">
-<meta property="og:image" content="https://drive.google.com/thumbnail?id=1lceebbUQWsQc4w4NsDvm1eooKBt8I3F1&sz=w1200">
+<meta property="og:description" content="video Bercocok Tanam Indonesia Part 7">
+<meta property="og:url" content="https://viral18plus.github.io/indonesia/bercocok-tanam-indonesia-part-7.html">
+<meta property="og:image" content="">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="1200">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Bercocok Tanam Indonesia Part 7">
-<meta name="twitter:description" content="Kumpulan video bercocok tanam ala Indonesia, dari bibit sampai panen.">
-<meta name="twitter:image" content="https://drive.google.com/thumbnail?id=1lceebbUQWsQc4w4NsDvm1eooKBt8I3F1&sz=w1200">
+<meta name="twitter:description" content="video Bercocok Tanam Indonesia Part 7">
+<meta name="twitter:image" content="">
 
 <!-- IKLAN ADSTERRA — POPUNDER (aktif di seluruh halaman) -->
 <script src="https://pl30677988.effectivecpmnetwork.com/3b/37/e2/3b37e254b77bbbdd9815f86b60261fe5.js"></script>
@@ -377,6 +377,13 @@
     return link.trim();
   }
 
+  function getCover(video){
+    if(video && video.ogImage) return video.ogImage;
+    if(!video || !video.judul) return "";
+    const slug = slugify(video.judul);
+    return `covers/${slug}.jpg`;
+  }
+
   function slugify(str){
     return str.toLowerCase().trim()
       .replace(/[^a-z0-9]+/g, '-')
@@ -384,18 +391,16 @@
   }
 
   // Thumbnail di situs (grid & halaman video) sekarang memakai gambar
-  // cover yang sama dengan og:image: coba covers/{slug}.jpg/.jpeg/.png/.webp
-  // dulu, kalau semuanya tidak ada baru fallback ke thumbnail otomatis
-  // Google Drive. Fallback dicoba berurutan lewat event onerror <img>.
-  function thumbImgHTML(driveId, judul){
+  // Thumbnail memakai ogImage dari videos.json atau cover lokal berdasarkan slug.
+  // Tidak ada fallback ke Google Drive.
+  function thumbImgHTML(v){
+    const driveId = v.driveId;
+    const judul = v.judul;
     const slug = slugify(judul);
-    const candidates = [
-      `covers/${slug}.png`,
-      `covers/${slug}.jpg`,
-      `covers/${slug}.jpeg`,
-      `covers/${slug}.webp`,
-      `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`
-    ];
+    const candidates = [];
+    const cover = getCover(v);
+    if(cover) candidates.push(cover);
+    candidates.push(`covers/${slug}.png`, `covers/${slug}.jpg`, `covers/${slug}.jpeg`, `covers/${slug}.webp`);
     const first = candidates.shift();
     const fallbackAttr = candidates.map(encodeURIComponent).join('|');
     return `<img class="video-thumb" src="${first}" data-fallback="${fallbackAttr}" onerror="thumbFallback(this)" alt="${judul}" loading="lazy">`;
@@ -417,7 +422,7 @@
       frame.innerHTML = `<iframe src="https://drive.google.com/file/d/${driveId}/preview?autoplay=1" allow="autoplay" allowfullscreen></iframe>`;
     } else {
       frame.innerHTML = `
-        ${thumbImgHTML(driveId, judul)}
+        ${thumbImgHTML(v)}
         <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
       `;
     }
